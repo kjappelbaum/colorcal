@@ -8,8 +8,10 @@ Calibrate the color of images using a color calibration card.
 
 The approach is semi-automatic. After picking the edges of the color calibration card, the rest should happen automatically.
 
-RGB values copied from 
+RGB values copied from
 https://github.com/G1teste/antonio/blob/8d91d348d8eb56d6379b5058dda2793a10909dd9/Catalano.Image/src/Catalano/Imaging/Tools/ColorCard.java
+
+Open source implementation of 10.1016/j.isprsjprs.2018.09.015 to be used directly in ELN.
 
 ## Installation
 

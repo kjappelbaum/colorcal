@@ -2,15 +2,21 @@
  * Get the averaged colors of the patches in a color checker card, following 10.1016/j.isprsjprs.2018.09.015
  * Only works if the distortion from rectangle is not too large
  */
+import { distance } from 'mathjs';
 
-import { formatWithCursor } from 'prettier';
+const ratioGapPatch = 0.12; // to be checked
+const vJumpFactor = (1 + ratioGapPatch) / (4 + 3 * ratioGapPatch);
+const hJumpFactor = (1 + ratioGapPatch) / (6 + 5 * ratioGapPatch);
 
-const ratioGapPatch = 0.125;
-const vJumpFactor = 0.257;
-const hJumpFactor = 0.17;
-
+/**
+ *Euclidean distance between points
+ *
+ * @param {Array} pointA
+ * @param {Array} pointB
+ * @returns
+ */
 function getHeight(pointA, pointB) {
-  return Math.distance(pointA, pointB);
+  return distance(pointA, pointB);
 }
 
 function getHeightPatch(totalHeight, patches = 4, gaps = 3) {
@@ -31,12 +37,12 @@ function getVJump(height) {
 /*
 Eq. A8
 */
-function getHJump(height) {
-  return height * hJumpFactor;
+function getHJump(width) {
+  return width * hJumpFactor;
 }
 
 /*
-Eq. A5/A6
+Eq. A5/A6, A9/A10
 */
 function getNextPoint(point, slope, jumpLength) {
   const denom = Math.sqrt(1 + Math.pow(slope, 2));
@@ -48,9 +54,8 @@ function getNextPoint(point, slope, jumpLength) {
 function getVerticalPoints(pointA, pointB, nRows = 4) {
   let verticalPoints = [];
   const slope = getSlope(pointA, pointB);
-  const height = getHeightPatch(getHeight(pointA, pointB));
+  const height = getHeight(pointA, pointB);
   const vJump = getVJump(height);
-
   let currentPoint = pointA;
 
   verticalPoints.push(currentPoint);
@@ -63,13 +68,24 @@ function getVerticalPoints(pointA, pointB, nRows = 4) {
   return verticalPoints;
 }
 
+/**
+ *
+ *
+ * @param {Array} pointA
+ * @param {Array} pointB
+ * @param {number} width  width of the patch
+ * @param {number} [nCols=6]
+ * @returns
+ */
 function getHorizontalPoints(pointA, pointB, width, nCols = 6) {
   let horizontalPoints = [];
-  const hJump = hJumpFactor * width;
+
+  const hJump = getHJump(width);
   const slope = getSlope(pointA, pointB);
   let currentPoint = pointA;
 
-  for (let i = 1; i < nRows; i++) {
+  horizontalPoints.push(currentPoint);
+  for (let i = 1; i < nCols; i++) {
     let nextPoint = getNextPoint(currentPoint, slope, hJump);
     horizontalPoints.push(nextPoint);
     currentPoint = nextPoint;
@@ -77,20 +93,17 @@ function getHorizontalPoints(pointA, pointB, width, nCols = 6) {
 
   return horizontalPoints;
 }
+
 /*
-eq. A7 
+eq. A7
 */
-function getColorPatchWidths(leftPoints, rightPoints) {
+function getRowWidths(leftPoints, rightPoints) {
   let rowWidths = [];
   for (let i = 0; i < leftPoints.length; i++) {
-    rowWidths.push(Math.distance(leftPoints[i], rightPoints[i]));
+    rowWidths.push(distance(leftPoints[i], rightPoints[i]));
   }
 
-  let patchWidths = [];
-  for (let i = 0; i < rowWidths.length; i++) {
-    patchWidths.push(rowWidths[i] / (6 + 5 * ratioGapPatch));
-  }
-  return patchWidths;
+  return rowWidths;
 }
 
 /*
@@ -104,18 +117,25 @@ function getColorPatchHeights(topPoints, bottomPoints) {
   return patchHeights;
 }
 
-/*
+/**
+ *
+ *
+ * @param {Array} pointA: edge of black box
+ * @param {Array} pointB: edge of whiteish box
+ * @param {Array} pointC: edge of turquise box
+ * @param {Array} pointD: edge of dark skin box
+ * @returns
  */
 function getColorPathCoordinates(pointA, pointB, pointC, pointD) {
   const leftPoints = getVerticalPoints(pointA, pointD);
   const rightPoints = getVerticalPoints(pointB, pointC);
 
-  const patchWidths = getColorPatchWidths(leftPoints, rightPoints);
+  const rowWidths = getRowWidths(leftPoints, rightPoints);
 
   let topLeftPoints = [];
-  for (let i = 0; i < patchWidths.length; i++) {
+  for (let i = 0; i < rowWidths.length; i++) {
     topLeftPoints.push(
-      getHorizontalPoints(leftPoints[i], rightPoints[i], patchWidths[i]),
+      getHorizontalPoints(leftPoints[i], rightPoints[i], rowWidths[i]),
     );
   }
 
@@ -124,7 +144,7 @@ function getColorPathCoordinates(pointA, pointB, pointC, pointD) {
     let toprightRow = [];
     for (let j = 0; j < topLeftPoints[i].length; j++) {
       let point = topRightPoints[i][j];
-      toprightRow.push([point[0] + patchWidths[j], point[1]]);
+      toprightRow.push([point[0] + getHJump(rowWidths[j]), point[1]]);
     }
     topRightPoints.push(toprightRow);
   }
@@ -155,7 +175,7 @@ function getColorPathCoordinates(pointA, pointB, pointC, pointD) {
     bottomRightPoints.push(bottomRightRow);
   }
 
-  return topLeftPoints, topRightPoints, bottomRightPoints, bottomLeftPoints;
+  return [topLeftPoints, topRightPoints, bottomRightPoints, bottomLeftPoints];
 }
 
 function getROIs(
@@ -163,4 +183,18 @@ function getROIs(
   topRightPoints,
   bottomRightPoints,
   bottomLeftPoints,
-) {}
+) {
+  const topLeftPointROIs = [];
+  const topRightPointROIs = [];
+  const bottomRightPointROIs = [];
+  const bottomLeftPointROIs = [];
+}
+
+export const testables = {
+  getHeightPatch: getHeightPatch,
+  getHeight: getHeight,
+  getVerticalPoints: getVerticalPoints,
+  getHorizontalPoints: getHorizontalPoints,
+  getRowWidths: getRowWidths,
+  getColorPathCoordinates: getColorPathCoordinates,
+};
