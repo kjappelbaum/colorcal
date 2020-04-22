@@ -140,14 +140,15 @@ function getColorPathCoordinates(pointA, pointB, pointC, pointD) {
   }
 
   let topRightPoints = [];
-  for (let i = 0; i < topLeftPoints; i++) {
+  for (let i = 0; i < topLeftPoints.length; i++) {
     let toprightRow = [];
     for (let j = 0; j < topLeftPoints[i].length; j++) {
-      let point = topRightPoints[i][j];
-      toprightRow.push([point[0] + getHJump(rowWidths[j]), point[1]]);
+      let point = topLeftPoints[i][j];
+      toprightRow.push([point[0] + getHJump(rowWidths[i]), point[1]]);
     }
     topRightPoints.push(toprightRow);
   }
+
 
   // now, get the heights of the patch in each column
   const patchHeights = getColorPatchHeights(
@@ -165,6 +166,7 @@ function getColorPathCoordinates(pointA, pointB, pointC, pointD) {
     bottomLeftPoints.push(bottomLeftRow);
   }
 
+  
   let bottomRightPoints = [];
   for (let i = 0; i < topRightPoints.length; i++) {
     let bottomRightRow = [];

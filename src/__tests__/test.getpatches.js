@@ -88,4 +88,9 @@ describe('Test get patches', () => {
       ).toBeLessThan(tolerance);
     }
   });
+
+  it('test get edge coordinates', () => {
+    const coordinates = getColorPathCoordinates(A, B, C, D);
+    console.log(coordinates);
+  });
 });
