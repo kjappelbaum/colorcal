@@ -64,6 +64,21 @@ describe('Test image loading', () => {
         rgbTolerance,
       );
     }
+
+    const rois = [roiBlackPatchReference, roiRedReferencePatch];
+    const colorsAveraged = getRGBAverages(imageData, rois);
+
+    for (let i; i < colorsAveraged[1].length; i++) {
+      expect(
+        Math.abs(colorsAveraged[1][i] - redPatchReference[i]),
+      ).toBeLessThan(rgbTolerance);
+    }
+
+    for (let i; i < colorsAveraged[0].length; i++) {
+      expect(
+        Math.abs(colorsAveraged[0][i] - blackPatchReference[i]),
+      ).toBeLessThan(rgbTolerance);
+    }
   });
 
   it('test the averaging on another image', async () => {
