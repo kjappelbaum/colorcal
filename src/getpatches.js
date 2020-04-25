@@ -2,14 +2,15 @@
  * Get the averaged colors of the patches in a color checker card, following 10.1016/j.isprsjprs.2018.09.015
  * Only works if the distortion from rectangle is not too large
  */
-import { distance, index, range, flatten, mean, matrix } from 'mathjs';
 import { Image } from 'image-js';
+import { distance, index, range, flatten, mean, matrix } from 'mathjs';
 
 const ratioGapPatchH = 0.176; // to be checked
 const ratioGapPatchV = 0.176; // to be checked
 const vJumpFactor = (1 + ratioGapPatchV) / (4 + 3 * ratioGapPatchV);
 const hJumpFactor = (1 + ratioGapPatchH) / (6 + 5 * ratioGapPatchH);
 const roiTolerance = 0.3;
+
 /**
  *Euclidean distance between points
  *
@@ -53,6 +54,14 @@ function getNextPoint(point, slope, jumpLength) {
   return [point[0] + x, point[1] + y];
 }
 
+/**
+ *
+ *
+ * @param {Array} pointA
+ * @param {Array} pointB
+ * @param {number} [nRows=4]
+ * @returns {Array} vertical points
+ */
 function getVerticalPoints(pointA, pointB, nRows = 4) {
   let verticalPoints = [];
   const slope = getSlope(pointA, pointB);
@@ -77,7 +86,7 @@ function getVerticalPoints(pointA, pointB, nRows = 4) {
  * @param {Array} pointB
  * @param {number} width  width of the patch
  * @param {number} [nCols=6]
- * @returns
+ * @returns {Array} horizontal points
  */
 function getHorizontalPoints(pointA, pointB, width, nCols = 6) {
   let horizontalPoints = [];
@@ -108,9 +117,13 @@ function getRowWidths(leftPoints, rightPoints) {
   return rowWidths;
 }
 
-/*
-We assume the height of the patches in each column is constant and calculate this here given the top and bottom points of each column
-*/
+/**
+ * We assume the height of the patches in each column is constant and calculate this here given the top and bottom points of each column
+ *
+ * @param {Array} topPoints
+ * @param {Array} bottomPoints
+ * @returns {Array} of heights
+ */
 function getColorPatchHeights(topPoints, bottomPoints) {
   let patchHeights = [];
   for (let i = 0; i < topPoints.length; i++) {
@@ -128,7 +141,7 @@ function getColorPatchHeights(topPoints, bottomPoints) {
  * @param {Array} pointB: edge of whiteish box
  * @param {Array} pointC: edge of turquise box
  * @param {Array} pointD: edge of dark skin box
- * @returns
+ * @returns {Array} topleft, topright, bottomright, bottomleft points
  */
 function getColorPathCoordinates(pointA, pointB, pointC, pointD) {
   const leftPoints = getVerticalPoints(pointA, pointD);
@@ -183,6 +196,16 @@ function getColorPathCoordinates(pointA, pointB, pointC, pointD) {
   return [topLeftPoints, topRightPoints, bottomRightPoints, bottomLeftPoints];
 }
 
+/**
+ *
+ *
+ * @param {Array} topLeftPoint
+ * @param {Array} topRightPoint
+ * @param {Array} bottomRightPoint
+ * @param {Array} bottomLeftPoint
+ * @param {Number} [tolerance=roiTolerance]
+ * @returns {Array} points of a rectangular ROI frame
+ */
 function getROIcoordinates(
   topLeftPoint,
   topRightPoint,
@@ -226,9 +249,15 @@ function getROIcoordinates(
   ];
 }
 
-/*
-This returns an array starting at A - B - C -D with all the border coordinates for the ROIs
-*/
+/**
+ *
+ *
+ * @param {Array} topLeftPoints
+ * @param {Array} topRightPoints
+ * @param {Array} bottomRightPoints
+ * @param {Array} bottomLeftPoints
+ * @returns {Array} starting at A - B - C -D with all the border coordinates for the ROIs
+ */
 function getROIs(
   topLeftPoints,
   topRightPoints,
@@ -265,6 +294,13 @@ function getImageData(imagePath) {
   return imageData;
 }
 
+/**
+ *
+ *
+ * @param {Array} rgbMatrix: Matrix with three channels
+ * @param {Array} roi: Array with four entries for topleft, topright, bottomright, bottomleft point of the ROI in which the averaging will be performed
+ * @returns {Array}: Averaged RGB colors
+ */
 function getRGBAverage(rgbMatrix, roi) {
   const selection = index(
     range(roi[0][1], roi[2][1]),
@@ -277,7 +313,15 @@ function getRGBAverage(rgbMatrix, roi) {
   return [Math.round(r), Math.round(g), Math.round(b)];
 }
 
-function getRGBAverages(rgbMatrix, rois) {}
+function getRGBAverages(rgbMatrix, rois) {
+  let rgbAverages = [];
+
+  for (let i = 0; i < rois.length; i++) {
+    rgbAverages.push(getRGBAverage(rgbMatrix, rois[i]));
+  }
+
+  return rgbAverages;
+}
 
 export function getRGBAveragesFromCard(pointA, pointB, pointC, pointD) {}
 
@@ -291,4 +335,5 @@ export const testables = {
   getROIs: getROIs,
   getImageData: getImageData,
   getRGBAverage: getRGBAverage,
+  getRGBAverages: getRGBAverages,
 };

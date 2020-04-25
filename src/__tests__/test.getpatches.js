@@ -1,6 +1,8 @@
-import { distance } from 'mathjs';
-import { testables } from '../getpatches';
 import { join } from 'path';
+
+import { distance } from 'mathjs';
+
+import { testables } from '../getpatches';
 
 const {
   getHeightPatch,
@@ -12,10 +14,10 @@ const {
   getROIs,
   getImageData,
   getRGBAverage,
+  getRGBAverages,
 } = testables;
 
 describe('Test image loading', () => {
-  const rgbPatch1 = [25, 27, 40];
   const blackPatchReference = [41, 32, 32];
   const redPatchReference = [200, 38, 46];
   const blackPatchReferenceIMG5248 = [26, 41, 49];
