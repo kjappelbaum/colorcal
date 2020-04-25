@@ -18,6 +18,13 @@ describe('Test image loading', () => {
   const rgbPatch1 = [25, 27, 40];
   const blackPatchReference = [41, 32, 32];
   const redPatchReference = [200, 38, 46];
+  const blackPatchReferenceIMG5248 = [26, 41, 49];
+  const roiBlackPatchIMG5248 = [
+    [468, 1896],
+    [473.5, 1976],
+    [595, 1907],
+    [605, 2021],
+  ];
   const rgbTolerance = 3;
   const roiBlackPatchReference = [
     [59, 618],
@@ -54,6 +61,18 @@ describe('Test image loading', () => {
       expect(Math.abs(colorsRed[i] - redPatchReference[i])).toBeLessThan(
         rgbTolerance,
       );
+    }
+  });
+
+  it('test the averaging on another image', async () => {
+    const imageData = await getImageData(
+      join(__dirname, '../__tests__/data/IMG_5248.jpg'),
+    );
+    const colorsBlack = getRGBAverage(imageData, roiBlackPatchIMG5248);
+    for (let i; i < colorsBlack.length; i++) {
+      expect(
+        Math.abs(colorsBlack[i] - blackPatchReferenceIMG5248[i]),
+      ).toBeLessThan(rgbTolerance);
     }
   });
 });
