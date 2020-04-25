@@ -1,6 +1,6 @@
 import { distance } from 'mathjs';
-
 import { testables } from '../getpatches';
+import { join } from 'path';
 
 const {
   getHeightPatch,
@@ -9,7 +9,54 @@ const {
   getHorizontalPoints,
   getRowWidths,
   getColorPathCoordinates,
+  getROIs,
+  getImageData,
+  getRGBAverage,
 } = testables;
+
+describe('Test image loading', () => {
+  const rgbPatch1 = [25, 27, 40];
+  const blackPatchReference = [41, 32, 32];
+  const redPatchReference = [200, 38, 46];
+  const rgbTolerance = 3;
+  const roiBlackPatchReference = [
+    [59, 618],
+    [98.5, 618],
+    [58.5, 646],
+    [96.5, 648, 5],
+  ];
+  const roiRedReferencePatch = [
+    [134, 386],
+    [160.5, 432],
+    [209, 388],
+    [203, 432],
+  ];
+  it('load the data', async () => {
+    const imageData = await getImageData(
+      join(__dirname, '../__tests__/data/IMG_5248.jpg'),
+    );
+    // console.log(imageData[0]);
+  });
+
+  it('test the averaging', async () => {
+    const imageData = await getImageData(
+      join(__dirname, '../__tests__/data/Datacolor-SpyderCheker24_Lead.jpg'),
+    );
+    // console.log(imageData[0]);
+    const colorsBlack = getRGBAverage(imageData, roiBlackPatchReference);
+    for (let i; i < colorsBlack.length; i++) {
+      expect(Math.abs(colorsBlack[i] - blackPatchReference[i])).toBeLessThan(
+        rgbTolerance,
+      );
+    }
+    const colorsRed = getRGBAverage(imageData, roiRedReferencePatch);
+    for (let i; i < colorsRed.length; i++) {
+      expect(Math.abs(colorsRed[i] - redPatchReference[i])).toBeLessThan(
+        rgbTolerance,
+      );
+    }
+  });
+});
 
 describe('Test get patches', () => {
   // Picked the coordinates on the test image by hand with imageJ
@@ -19,7 +66,7 @@ describe('Test get patches', () => {
   const C = [2491, 686.667];
   const D = [432.667, 769.33];
   const patchHeightADExpected = 294;
-  const patchWidthsExpected = 275;
+
   const leftVerticalPointsExpected = [
     A,
     [418.5, 1747.5],
@@ -194,5 +241,11 @@ describe('Test get patches', () => {
         distance(bottomLeftPoints[1][i], bottomLeftPointExpected2[i]),
       ).toBeLessThan(tolerance);
     }
+  });
+
+  it('test ROIs', () => {
+    const coordinates = getColorPathCoordinates(A, B, C, D);
+    const rois = getROIs(...coordinates);
+    expect(rois).toHaveLength(24);
   });
 });

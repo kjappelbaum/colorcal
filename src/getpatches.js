@@ -2,13 +2,14 @@
  * Get the averaged colors of the patches in a color checker card, following 10.1016/j.isprsjprs.2018.09.015
  * Only works if the distortion from rectangle is not too large
  */
-import { distance } from 'mathjs';
+import { distance, index, range, flatten, mean, matrix } from 'mathjs';
+import { Image } from 'image-js';
 
 const ratioGapPatchH = 0.176; // to be checked
 const ratioGapPatchV = 0.176; // to be checked
 const vJumpFactor = (1 + ratioGapPatchV) / (4 + 3 * ratioGapPatchV);
 const hJumpFactor = (1 + ratioGapPatchH) / (6 + 5 * ratioGapPatchH);
-
+const roiTolerance = 0.3;
 /**
  *Euclidean distance between points
  *
@@ -182,17 +183,103 @@ function getColorPathCoordinates(pointA, pointB, pointC, pointD) {
   return [topLeftPoints, topRightPoints, bottomRightPoints, bottomLeftPoints];
 }
 
+function getROIcoordinates(
+  topLeftPoint,
+  topRightPoint,
+  bottomRightPoint,
+  bottomLeftPoint,
+  tolerance = roiTolerance,
+) {
+  const xLeft = Math.max([topLeftPoint[0], bottomLeftPoint[0]]);
+  const xRight = Math.min([topRightPoint[0], bottomRightPoint[0]]);
+
+  const yTop = Math.min([topLeftPoint[1], topRightPoint[1]]);
+  const yBottom = Math.min([bottomLeftPoint[1], bottomRightPoint[1]]);
+
+  const xDistance = Math.abs(xRight - xLeft);
+  const yDistance = Math.abs(yTop - yBottom);
+
+  // Let's use a rectangle instead. this makes life a lot easier.
+  const topLeftNew = [
+    xLeft + tolerance * xDistance,
+    yTop - tolerance * yDistance,
+  ];
+  const topRightNew = [
+    xRight - tolerance * xDistance,
+    yTop - tolerance * yDistance,
+  ];
+  const bottomRightNew = [
+    xRight - tolerance * xDistance,
+    yBottom + tolerance * yDistance,
+  ];
+
+  const bottomLeftNew = [
+    xLeft + tolerance * xDistance,
+    yBottom + tolerance * yDistance,
+  ];
+
+  return [
+    Math.round(topLeftNew),
+    Math.round(topRightNew),
+    Math.round(bottomRightNew),
+    Math.round(bottomLeftNew),
+  ];
+}
+
+/*
+This returns an array starting at A - B - C -D with all the border coordinates for the ROIs
+*/
 function getROIs(
   topLeftPoints,
   topRightPoints,
   bottomRightPoints,
   bottomLeftPoints,
 ) {
-  const topLeftPointROIs = [];
-  const topRightPointROIs = [];
-  const bottomRightPointROIs = [];
-  const bottomLeftPointROIs = [];
+  const rois = [];
+  // iterate over the row and then the columns and get the ROI for each patch
+  for (let i = 0; i < topLeftPoints.length; i++) {
+    for (let j = 0; j < topLeftPoints[i].length; j++) {
+      rois.push(
+        getROIcoordinates(
+          topLeftPoints[i][j],
+          topRightPoints[i][j],
+          bottomRightPoints[i][j],
+          bottomLeftPoints[i][j],
+        ),
+      );
+    }
+  }
+  return rois;
 }
+
+// todo make async clearer
+function getImageData(imagePath) {
+  const imageData = Image.load(imagePath).then(function (image) {
+    const components = image.split();
+    return [
+      components[0].getMatrix(),
+      components[1].getMatrix(),
+      components[2].getMatrix(),
+    ];
+  });
+  return imageData;
+}
+
+function getRGBAverage(rgbMatrix, roi) {
+  const selection = index(
+    range(roi[0][1], roi[2][1]),
+    range(roi[0][0], roi[1][0]),
+  );
+  const r = mean(flatten(matrix(rgbMatrix[0]).subset(selection)));
+  const g = mean(flatten(matrix(rgbMatrix[1]).subset(selection)));
+  const b = mean(flatten(matrix(rgbMatrix[2]).subset(selection)));
+
+  return [Math.round(r), Math.round(g), Math.round(b)];
+}
+
+function getRGBAverages(rgbMatrix, rois) {}
+
+export function getRGBAveragesFromCard(pointA, pointB, pointC, pointD) {}
 
 export const testables = {
   getHeightPatch: getHeightPatch,
@@ -201,4 +288,7 @@ export const testables = {
   getHorizontalPoints: getHorizontalPoints,
   getRowWidths: getRowWidths,
   getColorPathCoordinates: getColorPathCoordinates,
+  getROIs: getROIs,
+  getImageData: getImageData,
+  getRGBAverage: getRGBAverage,
 };
