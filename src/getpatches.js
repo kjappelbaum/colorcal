@@ -298,7 +298,6 @@ function getImageData(imagePath) {
  * @returns {Array}: Averaged RGB colors
  */
 function getRGBAverage(rgbMatrix, roi) {
-
   const selection = index(
     range(Math.min(roi[0][1], roi[2][1]), Math.max(roi[0][1], roi[2][1])),
     range(Math.min(roi[0][0], roi[1][0]), Math.max(roi[0][0], roi[1][0])),
