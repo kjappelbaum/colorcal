@@ -1,15 +1,17 @@
 /**
  * Get the averaged colors of the patches in a color checker card, following 10.1016/j.isprsjprs.2018.09.015
  * Only works if the distortion from rectangle is not too large
+ * ToDo: Potentially we can make much more stuff average
+ * Todo: Make number of columns etc. options of the functions
  */
 import { Image } from 'image-js';
-import { distance, index, range, flatten, mean, matrix } from 'mathjs';
+import { distance, index, range, flatten, mean, matrix, round } from 'mathjs';
 
-const ratioGapPatchH = 0.176; // to be checked
-const ratioGapPatchV = 0.176; // to be checked
+const ratioGapPatchH = 0.18; // to be checked
+const ratioGapPatchV = 0.18; // to be checked
 const vJumpFactor = (1 + ratioGapPatchV) / (4 + 3 * ratioGapPatchV);
 const hJumpFactor = (1 + ratioGapPatchH) / (6 + 5 * ratioGapPatchH);
-const roiTolerance = 0.3;
+const roiTolerance = 0.4;
 
 /**
  *Euclidean distance between points
@@ -213,40 +215,34 @@ function getROIcoordinates(
   bottomLeftPoint,
   tolerance = roiTolerance,
 ) {
-  const xLeft = Math.max([topLeftPoint[0], bottomLeftPoint[0]]);
-  const xRight = Math.min([topRightPoint[0], bottomRightPoint[0]]);
+  const xLeft = Math.max(topLeftPoint[0], bottomLeftPoint[0]);
+  const xRight = Math.min(topRightPoint[0], bottomRightPoint[0]);
 
-  const yTop = Math.min([topLeftPoint[1], topRightPoint[1]]);
-  const yBottom = Math.min([bottomLeftPoint[1], bottomRightPoint[1]]);
+  const yTop = Math.min(topLeftPoint[1], topRightPoint[1]);
+  const yBottom = Math.min(bottomLeftPoint[1], bottomRightPoint[1]);
 
   const xDistance = Math.abs(xRight - xLeft);
   const yDistance = Math.abs(yTop - yBottom);
 
   // Let's use a rectangle instead. this makes life a lot easier.
   const topLeftNew = [
-    xLeft + tolerance * xDistance,
-    yTop - tolerance * yDistance,
+    round(xLeft + tolerance * xDistance),
+    round(yTop - tolerance * yDistance),
   ];
   const topRightNew = [
-    xRight - tolerance * xDistance,
-    yTop - tolerance * yDistance,
+    round(xRight - tolerance * xDistance),
+    round(yTop - tolerance * yDistance),
   ];
   const bottomRightNew = [
-    xRight - tolerance * xDistance,
-    yBottom + tolerance * yDistance,
+    round(xRight - tolerance * xDistance),
+    round(yBottom + tolerance * yDistance),
   ];
 
   const bottomLeftNew = [
-    xLeft + tolerance * xDistance,
-    yBottom + tolerance * yDistance,
+    round(xLeft + tolerance * xDistance),
+    round(yBottom + tolerance * yDistance),
   ];
-
-  return [
-    Math.round(topLeftNew),
-    Math.round(topRightNew),
-    Math.round(bottomRightNew),
-    Math.round(bottomLeftNew),
-  ];
+  return [topLeftNew, topRightNew, bottomRightNew, bottomLeftNew];
 }
 
 /**
@@ -264,7 +260,7 @@ function getROIs(
   bottomRightPoints,
   bottomLeftPoints,
 ) {
-  const rois = [];
+  let rois = [];
   // iterate over the row and then the columns and get the ROI for each patch
   for (let i = 0; i < topLeftPoints.length; i++) {
     for (let j = 0; j < topLeftPoints[i].length; j++) {
@@ -302,15 +298,17 @@ function getImageData(imagePath) {
  * @returns {Array}: Averaged RGB colors
  */
 function getRGBAverage(rgbMatrix, roi) {
+
   const selection = index(
-    range(roi[0][1], roi[2][1]),
-    range(roi[0][0], roi[1][0]),
+    range(Math.min(roi[0][1], roi[2][1]), Math.max(roi[0][1], roi[2][1])),
+    range(Math.min(roi[0][0], roi[1][0]), Math.max(roi[0][0], roi[1][0])),
   );
+
   const r = mean(flatten(matrix(rgbMatrix[0]).subset(selection)));
   const g = mean(flatten(matrix(rgbMatrix[1]).subset(selection)));
   const b = mean(flatten(matrix(rgbMatrix[2]).subset(selection)));
 
-  return [Math.round(r), Math.round(g), Math.round(b)];
+  return [round(r), round(g), round(b)];
 }
 
 function getRGBAverages(rgbMatrix, rois) {
@@ -323,7 +321,25 @@ function getRGBAverages(rgbMatrix, rois) {
   return rgbAverages;
 }
 
-export function getRGBAveragesFromCard(pointA, pointB, pointC, pointD) {}
+export async function getRGBAveragesFromCard(
+  imagePath,
+  pointA,
+  pointB,
+  pointC,
+  pointD,
+) {
+  const imageData = await getImageData(imagePath);
+  const roiCoordinates = getColorPathCoordinates(
+    pointA,
+    pointB,
+    pointC,
+    pointD,
+  );
+
+  const rois = getROIs(...roiCoordinates);
+  const rgbAverages = getRGBAverages(imageData, rois);
+  return rgbAverages;
+}
 
 export const testables = {
   getHeightPatch: getHeightPatch,
@@ -336,4 +352,5 @@ export const testables = {
   getImageData: getImageData,
   getRGBAverage: getRGBAverage,
   getRGBAverages: getRGBAverages,
+  getROIcoordinates: getROIcoordinates,
 };

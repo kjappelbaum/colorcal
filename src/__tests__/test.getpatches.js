@@ -2,7 +2,7 @@ import { join } from 'path';
 
 import { distance } from 'mathjs';
 
-import { testables } from '../getpatches';
+import { testables, getRGBAveragesFromCard } from '../getpatches';
 
 const {
   getHeightPatch,
@@ -15,51 +15,64 @@ const {
   getImageData,
   getRGBAverage,
   getRGBAverages,
+  // eslint-disable-next-line no-unused-vars
+  getROIcoordinates,
 } = testables;
 
 describe('Test image loading', () => {
   const blackPatchReference = [41, 32, 32];
   const redPatchReference = [200, 38, 46];
   const blackPatchReferenceIMG5248 = [26, 41, 49];
-  const roiBlackPatchIMG5248 = [
-    [468, 1896],
-    [473.5, 1976],
-    [595, 1907],
-    [605, 2021],
+  const rgbLastPatch = [111, 174, 156];
+  const rgbMinus3Patch = [68, 89, 55];
+  const roiLastPatch = [
+    [2225, 953],
+    [2423, 941],
+    [2465, 743],
+    [2261, 737],
   ];
-  const rgbTolerance = 3;
+  const roiBlackPatchIMG5248 = [
+    [468, 2022],
+    [659, 2009],
+    [647, 1853],
+    [485, 1853],
+  ];
+  const roiBlackPatchIMG52482 = [
+    [482, 2029],
+    [662, 2029],
+    [662, 1854],
+    [482, 1854],
+  ];
+
+  const rgbTolerance = 4;
   const roiBlackPatchReference = [
-    [59, 618],
-    [98.5, 618],
-    [58.5, 646],
-    [96.5, 648, 5],
+    [37, 45],
+    [118, 41],
+    [113, 110],
+    [48, 116],
   ];
   const roiRedReferencePatch = [
-    [134, 386],
-    [160.5, 432],
-    [209, 388],
-    [203, 432],
+    [282, 185],
+    [312, 184],
+    [311, 211],
+    [286, 211],
   ];
-  it('load the data', async () => {
-    const imageData = await getImageData(
-      join(__dirname, '../__tests__/data/IMG_5248.jpg'),
-    );
-    // console.log(imageData[0]);
-  });
 
   it('test the averaging', async () => {
     const imageData = await getImageData(
       join(__dirname, '../__tests__/data/Datacolor-SpyderCheker24_Lead.jpg'),
     );
-    // console.log(imageData[0]);
+
     const colorsBlack = getRGBAverage(imageData, roiBlackPatchReference);
-    for (let i; i < colorsBlack.length; i++) {
+    for (let i = 0; i < colorsBlack.length; i++) {
       expect(Math.abs(colorsBlack[i] - blackPatchReference[i])).toBeLessThan(
         rgbTolerance,
       );
     }
+
     const colorsRed = getRGBAverage(imageData, roiRedReferencePatch);
-    for (let i; i < colorsRed.length; i++) {
+
+    for (let i = 0; i < colorsRed.length; i++) {
       expect(Math.abs(colorsRed[i] - redPatchReference[i])).toBeLessThan(
         rgbTolerance,
       );
@@ -68,13 +81,13 @@ describe('Test image loading', () => {
     const rois = [roiBlackPatchReference, roiRedReferencePatch];
     const colorsAveraged = getRGBAverages(imageData, rois);
 
-    for (let i; i < colorsAveraged[1].length; i++) {
+    for (let i = 0; i < colorsAveraged[1].length; i++) {
       expect(
         Math.abs(colorsAveraged[1][i] - redPatchReference[i]),
       ).toBeLessThan(rgbTolerance);
     }
 
-    for (let i; i < colorsAveraged[0].length; i++) {
+    for (let i = 0; i < colorsAveraged[0].length; i++) {
       expect(
         Math.abs(colorsAveraged[0][i] - blackPatchReference[i]),
       ).toBeLessThan(rgbTolerance);
@@ -86,9 +99,30 @@ describe('Test image loading', () => {
       join(__dirname, '../__tests__/data/IMG_5248.jpg'),
     );
     const colorsBlack = getRGBAverage(imageData, roiBlackPatchIMG5248);
-    for (let i; i < colorsBlack.length; i++) {
+    for (let i = 0; i < colorsBlack.length; i++) {
       expect(
         Math.abs(colorsBlack[i] - blackPatchReferenceIMG5248[i]),
+      ).toBeLessThan(rgbTolerance);
+    }
+
+    const rois = [roiBlackPatchIMG5248, roiLastPatch, roiBlackPatchIMG52482];
+    const colorsAveraged = getRGBAverages(imageData, rois);
+
+    for (let i = 0; i < colorsAveraged[1].length; i++) {
+      expect(Math.abs(colorsAveraged[1][i] - rgbLastPatch[i])).toBeLessThan(
+        rgbTolerance,
+      );
+    }
+
+    for (let i = 0; i < colorsAveraged[0].length; i++) {
+      expect(
+        Math.abs(colorsAveraged[0][i] - blackPatchReferenceIMG5248[i]),
+      ).toBeLessThan(rgbTolerance);
+    }
+
+    for (let i = 0; i < colorsAveraged[2].length; i++) {
+      expect(
+        Math.abs(colorsAveraged[2][i] - blackPatchReferenceIMG5248[i]),
       ).toBeLessThan(rgbTolerance);
     }
   });
@@ -97,10 +131,10 @@ describe('Test image loading', () => {
 describe('Test get patches', () => {
   // Picked the coordinates on the test image by hand with imageJ
 
-  const A = [422, 2087.33];
-  const B = [2485.667, 2105.667];
-  const C = [2491, 686.667];
-  const D = [432.667, 769.33];
+  const A = [426, 2083];
+  const B = [2479, 2098];
+  const C = [2485, 692];
+  const D = [438, 773];
   const patchHeightADExpected = 294;
 
   const leftVerticalPointsExpected = [
@@ -134,10 +168,10 @@ describe('Test get patches', () => {
   ];
 
   const topRightPointsExpected3 = [
-    [1389.5, 2095],
-    [1385.5, 1739],
-    [1393.5, 1379],
-    [1387.5, 1021],
+    [1392, 2090],
+    [1392, 1736],
+    [1393, 1380],
+    [1395, 1022],
   ];
 
   const bottomRightPointsExpected = [
@@ -152,9 +186,9 @@ describe('Test get patches', () => {
   const bottomRightPointExpected2 = [
     [695.5, 1443.5],
     [1034.5, 1440.5],
-    [1378.5, 1436],
+    [1387, 1436],
     [1745, 1439],
-    [2105, 1423],
+    [2111, 1423],
     [2485, 1419],
   ];
 
@@ -176,7 +210,14 @@ describe('Test get patches', () => {
     [2177.5, 1421.5],
   ];
 
-  const tolerance = 40; // probably a bit high, but in this case the patches on the left are much shorter than the ones on the right due to map alignmnet of the camera
+  const topLeftPointExpected5 = [
+    [2176, 2094],
+    [2183, 1729],
+    [2187, 1357],
+    [2187, 993],
+  ];
+
+  const tolerance = 45; // probably a bit (too) high, but in this case the patches on the left are much shorter than the ones on the right due to map alignmnet of the camera
   it('get height', () => {
     const heightPatch = getHeightPatch(getHeight(A, D));
     expect(heightPatch - patchHeightADExpected).toBeLessThan(tolerance);
@@ -227,24 +268,25 @@ describe('Test get patches', () => {
     expect(coordinates).toHaveLength(4);
     const topLeftPoints = coordinates[0];
 
-    for (let i; i < topLeftPoints.length; i++) {
+    for (let i = 0; i < topLeftPoints.length; i++) {
       expect(
         distance(topLeftPoints[i][0], leftVerticalPointsExpected[i]),
       ).toBeLessThan(tolerance);
+
       expect(
-        distance(topLeftPoints[i][5], rightVerticalPointsExpected[i]),
+        distance(topLeftPoints[i][5], topLeftPointExpected5[i]),
       ).toBeLessThan(tolerance);
     }
 
     const topRightPoints = coordinates[1];
 
-    for (let i; i < topRightPoints.length; i++) {
+    for (let i = 0; i < topRightPoints.length; i++) {
       expect(
         distance(topRightPoints[i][0], topRightPointsExpectedLeft[i]),
       ).toBeLessThan(tolerance);
     }
 
-    for (let i; i < topRightPoints.length; i++) {
+    for (let i = 0; i < topRightPoints.length; i++) {
       expect(
         distance(topRightPoints[i][2], topRightPointsExpected3[i]),
       ).toBeLessThan(tolerance);
@@ -252,12 +294,13 @@ describe('Test get patches', () => {
 
     const bottomRightPoints = coordinates[2];
     expect(bottomRightPoints).toHaveLength(4);
-    for (let i; i < bottomRightPoints[0].length; i++) {
+    for (let i = 0; i < bottomRightPoints[0].length; i++) {
       expect(
         distance(bottomRightPoints[0][i], bottomRightPointsExpected[i]),
       ).toBeLessThan(tolerance);
     }
-    for (let i; i < bottomRightPoints[1].length; i++) {
+    for (let i = 0; i < bottomRightPoints[1].length; i++) {
+      console.log(bottomRightPoints[1][i], bottomRightPointExpected2[i]);
       expect(
         distance(bottomRightPoints[1][i], bottomRightPointExpected2[i]),
       ).toBeLessThan(tolerance);
@@ -266,13 +309,13 @@ describe('Test get patches', () => {
     const bottomLeftPoints = coordinates[3];
     expect(bottomLeftPoints).toHaveLength(4);
 
-    for (let i; i < bottomLeftPoints[0].length; i++) {
+    for (let i = 0; i < bottomLeftPoints[0].length; i++) {
       expect(
         distance(bottomLeftPoints[0][i], bottomLeftPointsExpected[i]),
       ).toBeLessThan(tolerance);
     }
 
-    for (let i; i < bottomLeftPoints[1].length; i++) {
+    for (let i = 0; i < bottomLeftPoints[1].length; i++) {
       expect(
         distance(bottomLeftPoints[1][i], bottomLeftPointExpected2[i]),
       ).toBeLessThan(tolerance);
@@ -283,5 +326,33 @@ describe('Test get patches', () => {
     const coordinates = getColorPathCoordinates(A, B, C, D);
     const rois = getROIs(...coordinates);
     expect(rois).toHaveLength(24);
+  });
+
+  it('test the whole thing', async () => {
+    const rgbMeasured = await getRGBAveragesFromCard(
+      join(__dirname, '../__tests__/data/IMG_5248.jpg'),
+      A,
+      B,
+      C,
+      D,
+    );
+
+    for (let i = 0; i < rgbMeasured[0]; i++) {
+      expect(
+        Math.abs(rgbMeasured[0][i] - blackPatchReferenceIMG5248[i]),
+      ).toBeLessThan(rgbTolerance);
+    }
+
+    for (let i = 0; i < rgbMeasured[rgbMeasured.length - 1]; i++) {
+      expect(
+        Math.abs(rgbMeasured[rgbMeasured.length - 1][i] - rgbLastPatch[i]),
+      ).toBeLessThan(rgbTolerance);
+    }
+
+    for (let i = 0; i < rgbMeasured[rgbMeasured.length - 3]; i++) {
+      expect(
+        Math.abs(rgbMeasured[rgbMeasured.length - 3][i] - rgbMinus3Patch[i]),
+      ).toBeLessThan(rgbTolerance);
+    }
   });
 });
