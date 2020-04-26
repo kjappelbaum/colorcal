@@ -15,13 +15,14 @@ export function getCalibrationMatrix(
   actualColors,
   referenceColors = referenceColors,
 ) {
-  const actualColors = matrix(actualColors);
-  const actualColorsT = transpose(actualColors);
+  const actualColorsT = matrix(actualColors);
+  const actualColorsM = transpose(actualColorsT);
+  console.log(actualColorsM.size());
 
-  const referenceColors = matrix(referenceColors);
+  const referenceColorsM = transpose(matrix(referenceColors));
 
-  const rhsA = multiply(referenceColors, actualColorsT);
-  const rhsB = multiply(actualColors, actualColorsT);
+  const rhsA = multiply(referenceColorsM, actualColorsT);
+  const rhsB = multiply(actualColorsM, actualColorsT);
 
   const rhsBInverse = inv(rhsB);
   const ccm = multiply(rhsA, rhsBInverse);
@@ -35,10 +36,10 @@ export function getCalibrationMatrix(
  * @export
  * @param {Array} imageData
  * @param {Matrix} calibrationMatrix
- * @returns {Matrix} calibrated image 
+ * @returns {Matrix} calibrated image
  */
 export function calibrateImage(imageData, calibrationMatrix) {
-  const imageData = matrix(imageData);
-  const calibratedImage = multiply(calibrationMatrix, imageData);
+  const imageDataM = matrix(imageData);
+  const calibratedImage = multiply(calibrationMatrix, imageDataM);
   return calibrateImage;
 }
