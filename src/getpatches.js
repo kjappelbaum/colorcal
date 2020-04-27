@@ -282,9 +282,9 @@ function getImageData(imagePath) {
   const imageData = Image.load(imagePath).then(function (image) {
     const components = image.split();
     return [
-      components[0].getMatrix(),
-      components[1].getMatrix(),
-      components[2].getMatrix(),
+      components[0].getMatrix().to2DArray(),
+      components[1].getMatrix().to2DArray(),
+      components[2].getMatrix().to2DArray(),
     ];
   });
   return imageData;

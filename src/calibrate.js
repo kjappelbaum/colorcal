@@ -1,13 +1,4 @@
-import {
-  matrix,
-  transpose,
-  multiply,
-  inv,
-  identity,
-  index,
-  subset,
-  range,
-} from 'mathjs';
+import { matrix, transpose, multiply, inv, reshape } from 'mathjs';
 
 /**
  *Calculate the color calobration matrix given the measure colors
@@ -47,23 +38,18 @@ export function getCalibrationMatrix(
 export function calibrateImage(imageData, calibrationMatrix) {
   const width = imageData[0].length;
   const height = imageData[0][0].length;
-  const imageDataRe = matrix([
+  let imageDataRe = matrix([
     imageData[0].flat(),
     imageData[1].flat(),
     imageData[2].flat(),
   ]);
 
-  const calibratedImage = multiply(identity(3), imageDataRe);
-  const calibratedArray = [
-    subset(calibratedImage, index(0, range(0, width * height - 1)))
-      .resize([width, height])
-      .valueOf(),
-    subset(calibratedImage, index(1, range(0, width * height - 1)))
-      .resize([width, height])
-      .valueOf(),
-    subset(calibratedImage, index(2, range(0, width * height - 1)))
-      .resize([width, height])
-      .valueOf(),
-  ];
-  return calibratedArray;
+  let calibratedImage = multiply(calibrationMatrix, imageDataRe);
+
+  // let r = subset(calibratedImage, index(0, range(0, width * height - 1)));
+  // let g = subset(calibratedImage, index(1, range(0, width * height - 1)));
+  // let b = subset(calibratedImage, index(2, range(0, width * height - 1)));
+  calibratedImage = reshape(calibratedImage, [3, width, height]);
+
+  return calibratedImage;
 }

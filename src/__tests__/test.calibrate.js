@@ -1,6 +1,6 @@
 import { join } from 'path';
 
-import { trace, sum } from 'mathjs';
+import { trace, sum, identity } from 'mathjs';
 
 import { getCalibrationMatrix, calibrateImage } from '../calibrate';
 import { testables2 } from '../getpatches';
@@ -24,14 +24,7 @@ describe('test the computation of the calibration matrix', () => {
     const imageData = await getImageData(
       join(__dirname, '../__tests__/data/Datacolor-SpyderCheker24_Lead.jpg'),
     );
-
-    const calibrationMatrixIdentity = getCalibrationMatrix(
-      referenceColors,
-      referenceColors,
-    );
-
-    const rewrittenImage = calibrateImage(imageData, calibrationMatrixIdentity);
-
-    expect(rewrittenImage).toStrictEqual(imageData);
+    const rewrittenImage = calibrateImage(imageData, identity(3));
+    expect(rewrittenImage.toArray()).toStrictEqual(imageData);
   });
 });
