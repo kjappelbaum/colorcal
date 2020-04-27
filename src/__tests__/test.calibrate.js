@@ -25,6 +25,6 @@ describe('test the computation of the calibration matrix', () => {
       join(__dirname, '../__tests__/data/Datacolor-SpyderCheker24_Lead.jpg'),
     );
     const rewrittenImage = calibrateImage(imageData, identity(3));
-    expect(rewrittenImage.toArray()).toStrictEqual(imageData);
+    expect(rewrittenImage).toStrictEqual(imageData);
   });
 });

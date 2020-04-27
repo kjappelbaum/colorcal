@@ -51,5 +51,5 @@ export function calibrateImage(imageData, calibrationMatrix) {
   // let b = subset(calibratedImage, index(2, range(0, width * height - 1)));
   calibratedImage = reshape(calibratedImage, [3, width, height]);
 
-  return calibratedImage;
+  return calibratedImage.toArray();
 }
