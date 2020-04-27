@@ -1,6 +1,13 @@
-import { matrix, transpose, multiply, inv } from 'mathjs';
-
-const referenceColors = require('./spydercheckr24.json');
+import {
+  matrix,
+  transpose,
+  multiply,
+  inv,
+  identity,
+  index,
+  subset,
+  range,
+} from 'mathjs';
 
 /**
  *Calculate the color calobration matrix given the measure colors
@@ -35,11 +42,28 @@ export function getCalibrationMatrix(
  * @export
  * @param {Array} imageData
  * @param {Matrix} calibrationMatrix
- * @returns {Matrix} calibrated image
+ * @returns {Array} calibrated image data
  */
 export function calibrateImage(imageData, calibrationMatrix) {
-  console.log(imageData[0].length, imageData[0][0].length);
-  const imageDataM = matrix(imageData);
-  const calibratedImage = multiply(calibrationMatrix, imageDataM);
-  return calibrateImage;
+  const width = imageData[0].length;
+  const height = imageData[0][0].length;
+  const imageDataRe = matrix([
+    imageData[0].flat(),
+    imageData[1].flat(),
+    imageData[2].flat(),
+  ]);
+
+  const calibratedImage = multiply(identity(3), imageDataRe);
+  const calibratedArray = [
+    subset(calibratedImage, index(0, range(0, width * height - 1)))
+      .resize([width, height])
+      .valueOf(),
+    subset(calibratedImage, index(1, range(0, width * height - 1)))
+      .resize([width, height])
+      .valueOf(),
+    subset(calibratedImage, index(2, range(0, width * height - 1)))
+      .resize([width, height])
+      .valueOf(),
+  ];
+  return calibratedArray;
 }

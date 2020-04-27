@@ -32,6 +32,6 @@ describe('test the computation of the calibration matrix', () => {
 
     const rewrittenImage = calibrateImage(imageData, calibrationMatrixIdentity);
 
-    console.log(rewrittenImage);
+    expect(rewrittenImage).toStrictEqual(imageData);
   });
 });

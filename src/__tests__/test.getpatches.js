@@ -24,7 +24,7 @@ describe('Test image loading', () => {
   const redPatchReference = [200, 38, 46];
   const blackPatchReferenceIMG5248 = [26, 41, 49];
   const rgbLastPatch = [111, 174, 156];
-  const rgbMinus3Patch = [68, 89, 55];
+
   const roiLastPatch = [
     [2225, 953],
     [2423, 941],
@@ -130,7 +130,9 @@ describe('Test image loading', () => {
 
 describe('Test get patches', () => {
   // Picked the coordinates on the test image by hand with imageJ
-
+  const rgbMinus3Patch = [68, 89, 55];
+  const rgbLastPatch = [111, 174, 156];
+  const rgbTolerance = 4;
   const A = [426, 2083];
   const B = [2479, 2098];
   const C = [2485, 692];
@@ -216,6 +218,8 @@ describe('Test get patches', () => {
     [2187, 1357],
     [2187, 993],
   ];
+
+  const blackPatchReferenceIMG5248 = [26, 41, 49];
 
   const tolerance = 45; // probably a bit (too) high, but in this case the patches on the left are much shorter than the ones on the right due to map alignmnet of the camera
   it('get height', () => {
