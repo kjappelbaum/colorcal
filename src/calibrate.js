@@ -17,7 +17,6 @@ export function getCalibrationMatrix(
 ) {
   const actualColorsT = matrix(actualColors);
   const actualColorsM = transpose(actualColorsT);
-  console.log(actualColorsM.size());
 
   const referenceColorsM = transpose(matrix(referenceColors));
 
@@ -39,6 +38,7 @@ export function getCalibrationMatrix(
  * @returns {Matrix} calibrated image
  */
 export function calibrateImage(imageData, calibrationMatrix) {
+  console.log(imageData[0].length, imageData[0][0].length);
   const imageDataM = matrix(imageData);
   const calibratedImage = multiply(calibrationMatrix, imageDataM);
   return calibrateImage;

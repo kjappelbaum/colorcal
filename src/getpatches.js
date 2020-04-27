@@ -353,3 +353,5 @@ export const testables = {
   getRGBAverages: getRGBAverages,
   getROIcoordinates: getROIcoordinates,
 };
+
+export const testables2 = { getImageData: getImageData };

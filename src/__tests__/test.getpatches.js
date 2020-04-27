@@ -300,7 +300,6 @@ describe('Test get patches', () => {
       ).toBeLessThan(tolerance);
     }
     for (let i = 0; i < bottomRightPoints[1].length; i++) {
-      console.log(bottomRightPoints[1][i], bottomRightPointExpected2[i]);
       expect(
         distance(bottomRightPoints[1][i], bottomRightPointExpected2[i]),
       ).toBeLessThan(tolerance);
