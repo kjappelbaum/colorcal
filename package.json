@@ -51,6 +51,6 @@
   },
   "dependencies": {
     "image-js": "^0.21.9",
-    "mathjs": "^6.6.4"
+    "mathjs": "^8.1.1"
   }
 }
